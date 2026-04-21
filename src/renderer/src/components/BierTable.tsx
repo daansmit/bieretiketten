@@ -7,7 +7,8 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
-  type ColumnFiltersState
+  type ColumnFiltersState,
+  type VisibilityState
 } from '@tanstack/react-table'
 import type { BierRow } from '../App'
 
@@ -24,14 +25,23 @@ const COLUMNS: { key: keyof BierRow; label: string; filterable: boolean; width?:
   { key: 'plaatsnaam', label: 'Plaatsnaam',  filterable: true,  width: 130 },
   { key: 'land',       label: 'Land',        filterable: true,  width: 110 },
   { key: 'alcohol',    label: 'Alcohol',     filterable: true,  width: 80  },
+  { key: 'categorie',  label: 'Categorie',   filterable: true,  width: 110 },
+  { key: 'kleur',      label: 'Kleur',       filterable: true,  width: 90  },
   { key: 'pagina',     label: 'Pagina',      filterable: true,  width: 70  },
   { key: 'letter',     label: 'Letter',      filterable: false, width: 60  }
 ]
+
+// Columns hidden by default
+const DEFAULT_VISIBILITY: VisibilityState = {
+  categorie: false,
+  kleur: false
+}
 
 export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(DEFAULT_VISIBILITY)
 
   const columns = useMemo<ColumnDef<BierRow>[]>(
     () =>
@@ -48,9 +58,10 @@ export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Elemen
   const table = useReactTable({
     data: rows,
     columns,
-    state: { sorting, columnFilters },
+    state: { sorting, columnFilters, columnVisibility },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel()
@@ -68,7 +79,10 @@ export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Elemen
 
   const hasActiveFilters = Object.values(filterValues).some((v) => v !== '')
 
-  const filterableColumns = COLUMNS.filter((c) => c.filterable)
+  // Only show filter inputs for filterable columns that are currently visible
+  const visibleFilterableColumns = COLUMNS.filter(
+    (c) => c.filterable && columnVisibility[c.key] !== false
+  )
 
   const filteredRows = table.getFilteredRowModel().rows
   const visibleRows = filteredRows.slice(0, 1000)
@@ -76,9 +90,28 @@ export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Elemen
 
   return (
     <>
+      {/* Column visibility toggles */}
+      <div className="column-toggle-bar">
+        <span className="column-toggle-label">Kolommen:</span>
+        {COLUMNS.map((col) => {
+          const isVisible = columnVisibility[col.key] !== false
+          return (
+            <button
+              key={col.key}
+              className={`btn btn-toggle${isVisible ? ' active' : ''}`}
+              onClick={() =>
+                setColumnVisibility((prev) => ({ ...prev, [col.key]: !isVisible }))
+              }
+            >
+              {col.label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Filter Bar */}
       <div className="filter-bar">
-        {filterableColumns.map((col) => (
+        {visibleFilterableColumns.map((col) => (
           <div className="filter-group" key={col.key} style={{ width: col.width }}>
             <label htmlFor={`filter-${col.key}`}>{col.label}</label>
             <input

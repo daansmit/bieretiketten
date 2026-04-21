@@ -135,24 +135,47 @@ app.whenReady().then(() => {
       await workbook.xlsx.readFile(filePath)
       const sheet = workbook.worksheets[0]
 
-      // Column positions are fixed (no header row in this file)
-      const COL_NAMES: Record<number, string> = {
-        1: 'naam',
-        2: 'soort',
-        3: 'brouwerij',
-        4: 'plaatsnaam',
-        5: 'land',
-        6: 'alcohol',
-        7: 'pagina',
-        8: 'letter'
+      // Map known Excel header names (normalised) to canonical field keys.
+      // The sheet has a header row (row 1) with 10 columns:
+      //   Naam bieren | Soort bier | Brouwerij | Plaatsnaam | Land |
+      //   Alcoh.%     | Categorie  | Kleur      | Pagina     | Lettercode
+      const HEADER_MAP: Record<string, string> = {
+        'naam bieren': 'naam',
+        'soort bier':  'soort',
+        brouwerij:     'brouwerij',
+        plaatsnaam:    'plaatsnaam',
+        land:          'land',
+        'alcoh.%':     'alcohol',
+        categorie:     'categorie',
+        kleur:         'kleur',
+        pagina:        'pagina',
+        lettercode:    'letter'
       }
 
+      // Build column-index → canonical-key map from the header row
+      const headerRow = sheet.getRow(1)
+      const colKeyMap: Record<number, string> = {}
+      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        const raw = String(cell.value ?? '').toLowerCase().trim()
+        const key = HEADER_MAP[raw]
+        if (key) colKeyMap[colNumber] = key
+      })
+
       const rows: Record<string, unknown>[] = []
-      sheet.eachRow({ includeEmpty: false }, (row) => {
+      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber === 1) return // skip header
         const obj: Record<string, unknown> = {}
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          const key = COL_NAMES[colNumber]
-          if (key) obj[key] = extractCellValue(cell.value)
+          const key = colKeyMap[colNumber]
+          if (!key) return
+          // Percentage cells are stored as decimals (e.g. 0.065 for 6,5%).
+          // Format them as Dutch percentage strings.
+          if (cell.numFmt && cell.numFmt.includes('%') && typeof cell.value === 'number') {
+            const pct = cell.value * 100
+            obj[key] = pct.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%'
+          } else {
+            obj[key] = extractCellValue(cell.value)
+          }
         })
         rows.push(obj)
       })

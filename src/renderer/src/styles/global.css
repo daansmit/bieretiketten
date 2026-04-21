@@ -159,7 +159,48 @@ html, body, #root {
 }
 .btn-secondary:hover { background: var(--gray-400); color: var(--white); }
 
-/* ===== Filter Bar ===== */
+/* ===== Column Visibility Toggle Bar ===== */
+.column-toggle-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.column-toggle-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.btn-toggle {
+  background: var(--white);
+  color: var(--gray-500);
+  border: 1px solid var(--gray-300);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-toggle:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.btn-toggle.active {
+  background: var(--amber);
+  color: var(--white);
+  border-color: var(--amber);
+}
 .filter-bar {
   display: flex;
   flex-wrap: wrap;

@@ -10,6 +10,8 @@ export interface BierRow {
   plaatsnaam: string
   land: string
   alcohol: string | number
+  categorie: string
+  kleur: string
   pagina: string | number
   letter: string
   [key: string]: string | number
