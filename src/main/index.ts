@@ -135,19 +135,23 @@ app.whenReady().then(() => {
       await workbook.xlsx.readFile(filePath)
       const sheet = workbook.worksheets[0]
 
-      // Read header row (row 1) to build column-name map
-      const headerRow = sheet.getRow(1)
-      const headers: string[] = []
-      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        headers[colNumber - 1] = String(cell.value ?? '').toLowerCase().trim()
-      })
+      // Column positions are fixed (no header row in this file)
+      const COL_NAMES: Record<number, string> = {
+        1: 'naam',
+        2: 'soort',
+        3: 'brouwerij',
+        4: 'plaatsnaam',
+        5: 'land',
+        6: 'alcohol',
+        7: 'pagina',
+        8: 'letter'
+      }
 
       const rows: Record<string, unknown>[] = []
-      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-        if (rowNumber === 1) return // skip header
+      sheet.eachRow({ includeEmpty: false }, (row) => {
         const obj: Record<string, unknown> = {}
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          const key = headers[colNumber - 1]
+          const key = COL_NAMES[colNumber]
           if (key) obj[key] = extractCellValue(cell.value)
         })
         rows.push(obj)

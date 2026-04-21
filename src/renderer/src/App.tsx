@@ -32,25 +32,7 @@ export default function App(): JSX.Element {
     setLoading(false)
     if (result.success && result.rows) {
       setFilePath(path)
-      // Normalize keys to lowercase
-      const normalized = result.rows.map((r) => {
-        const row: BierRow = {
-          naam: '',
-          soort: '',
-          brouwerij: '',
-          plaatsnaam: '',
-          land: '',
-          alcohol: '',
-          pagina: '',
-          letter: ''
-        }
-        for (const key of Object.keys(r)) {
-          const lk = key.toLowerCase().trim() as keyof BierRow
-          if (lk in row) row[lk] = r[key] as string | number
-        }
-        return row
-      })
-      setRows(normalized)
+      setRows(result.rows as BierRow[])
     } else {
       setError(result.error ?? 'Onbekende fout')
     }
