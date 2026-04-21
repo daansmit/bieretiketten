@@ -1,6 +1,6 @@
 # 🍺 Bieretiketten
 
-**Bieretiketten** is een desktop-applicatie voor Sjef — een enthousiaste Nederlandse bierетikettenverzamelaar — om zijn collectie bij te houden en te bekijken.
+**Bieretiketten** is een desktop-applicatie voor Sjef — een enthousiaste Nederlandse bieretikettenverzamelaar — om zijn collectie bij te houden en te bekijken.
 
 De app is gebouwd met [Electron](https://www.electronjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/) en [Vite](https://vitejs.dev/).
 

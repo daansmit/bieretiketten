@@ -3,11 +3,10 @@
  * Works for both Windows (backslash) and POSIX (forward slash) paths.
  */
 export function dirname(filePath: string): string {
-  // Normalise to forward slashes for splitting
   const normalised = filePath.replace(/\\/g, '/')
   const lastSlash = normalised.lastIndexOf('/')
   if (lastSlash === -1) return '.'
-  return filePath.substring(0, lastSlash) || '/'
+  return normalised.substring(0, lastSlash) || '/'
 }
 
 /**

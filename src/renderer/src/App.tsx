@@ -23,13 +23,6 @@ export default function App(): JSX.Element {
   const [selectedRow, setSelectedRow] = useState<BierRow | null>(null)
   const [imageFiles, setImageFiles] = useState<string[]>([])
 
-  // On mount, restore last file
-  useEffect(() => {
-    window.api.getLastFile().then((lastFile) => {
-      if (lastFile) loadFile(lastFile)
-    })
-  }, [])
-
   const loadFile = useCallback(async (path: string) => {
     setLoading(true)
     setError(null)
@@ -62,6 +55,13 @@ export default function App(): JSX.Element {
       setError(result.error ?? 'Onbekende fout')
     }
   }, [])
+
+  // On mount, restore last file
+  useEffect(() => {
+    window.api.getLastFile().then((lastFile) => {
+      if (lastFile) loadFile(lastFile)
+    })
+  }, [loadFile])
 
   const handleSelectFile = async (): Promise<void> => {
     const path = await window.api.selectFile()
