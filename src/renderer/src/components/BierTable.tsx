@@ -70,6 +70,10 @@ export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Elemen
 
   const filterableColumns = COLUMNS.filter((c) => c.filterable)
 
+  const filteredRows = table.getFilteredRowModel().rows
+  const visibleRows = filteredRows.slice(0, 1000)
+  const tooManyRows = filteredRows.length > 1000
+
   return (
     <>
       {/* Filter Bar */}
@@ -93,55 +97,67 @@ export function BierTable({ rows, selectedRow, onRowSelect }: Props): JSX.Elemen
         )}
       </div>
 
-      {/* Table */}
-      <div className="table-container">
-        <table>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const sorted = header.column.getIsSorted()
-                  return (
-                    <th
-                      key={header.id}
-                      style={{ width: header.getSize() }}
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      <span className="sort-icon">
-                        {sorted === 'asc' ? '▲' : sorted === 'desc' ? '▼' : ''}
-                      </span>
-                    </th>
-                  )
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => {
-              const isSelected = selectedRow === row.original
-              return (
-                <tr
-                  key={row.id}
-                  className={isSelected ? 'selected' : ''}
-                  onClick={() => onRowSelect(isSelected ? null : row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} title={String(cell.getValue() ?? '')}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
+      {/* Too-many-results gate */}
+      {tooManyRows ? (
+        <div className="too-many-rows">
+          <span className="icon">🔍</span>
+          <p>
+            <strong>{filteredRows.length.toLocaleString('nl-NL')}</strong> resultaten gevonden.
+            Verfijn de filter om minder dan 1.000 etiketten te tonen.
+          </p>
+        </div>
+      ) : (
+        /* Table */
+        <div className="table-container">
+          <table>
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const sorted = header.column.getIsSorted()
+                    return (
+                      <th
+                        key={header.id}
+                        style={{ width: header.getSize() }}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <span className="sort-icon">
+                          {sorted === 'asc' ? '▲' : sorted === 'desc' ? '▼' : ''}
+                        </span>
+                      </th>
+                    )
+                  })}
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => {
+                const isSelected = selectedRow === row.original
+                return (
+                  <tr
+                    key={row.id}
+                    className={isSelected ? 'selected' : ''}
+                    onClick={() => onRowSelect(isSelected ? null : row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} title={String(cell.getValue() ?? '')}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Status Bar */}
       <div className="status-bar">
-        {table.getFilteredRowModel().rows.length} van {rows.length} etiketten
-        {hasActiveFilters && ' (gefilterd)'}
+        {tooManyRows
+          ? `${filteredRows.length.toLocaleString('nl-NL')} van ${rows.length.toLocaleString('nl-NL')} etiketten — verfijn de filter`
+          : `${filteredRows.length.toLocaleString('nl-NL')} van ${rows.length.toLocaleString('nl-NL')} etiketten${hasActiveFilters ? ' (gefilterd)' : ''}`}
       </div>
     </>
   )

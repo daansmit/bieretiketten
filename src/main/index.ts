@@ -37,6 +37,42 @@ function storeSet(key: string, value: unknown): void {
   writeStore(data)
 }
 
+/**
+ * Convert an ExcelJS CellValue to a plain string or number.
+ * ExcelJS can return rich-text objects, formula objects, hyperlink objects,
+ * error objects, or Dates — none of which JSON-serialise to readable text.
+ */
+function extractCellValue(value: ExcelJS.CellValue): string | number {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number') return value
+  if (typeof value === 'boolean') return String(value)
+  if (value instanceof Date) return value.toLocaleDateString('nl-NL')
+
+  // RichText: { richText: Array<{ text: string, font?: ... }> }
+  if (typeof value === 'object' && 'richText' in value) {
+    return (value as ExcelJS.CellRichTextValue).richText.map((rt) => rt.text).join('')
+  }
+
+  // Formula: { formula: string, result?: CellValue }
+  if (typeof value === 'object' && 'formula' in value) {
+    const result = (value as ExcelJS.CellFormulaValue).result
+    if (result === null || result === undefined) return ''
+    return extractCellValue(result as ExcelJS.CellValue)
+  }
+
+  // Hyperlink: { text: string | CellRichTextValue, hyperlink: string }
+  if (typeof value === 'object' && 'hyperlink' in value) {
+    const text = (value as ExcelJS.CellHyperlinkValue).text
+    return typeof text === 'string' ? text : extractCellValue(text as ExcelJS.CellValue)
+  }
+
+  // Error: { error: string }
+  if (typeof value === 'object' && 'error' in value) return ''
+
+  return String(value)
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -112,7 +148,7 @@ app.whenReady().then(() => {
         const obj: Record<string, unknown> = {}
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
           const key = headers[colNumber - 1]
-          if (key) obj[key] = cell.value ?? ''
+          if (key) obj[key] = extractCellValue(cell.value)
         })
         rows.push(obj)
       })

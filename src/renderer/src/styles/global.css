@@ -309,6 +309,30 @@ tbody td {
   font-size: 15px;
 }
 
+/* ===== Too-many-rows gate ===== */
+.too-many-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  color: var(--text-muted);
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.too-many-rows .icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.too-many-rows p {
+  font-size: 15px;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
 /* ===== Side Panel ===== */
 .side-panel-header {
   display: flex;
