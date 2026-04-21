@@ -25,6 +25,12 @@ export default function App(): JSX.Element {
   const [selectedRow, setSelectedRow] = useState<BierRow | null>(null)
   const [imageFiles, setImageFiles] = useState<string[]>([])
 
+  type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error'
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle')
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null)
+  const [downloadProgress, setDownloadProgress] = useState(0)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+
   const loadFile = useCallback(async (path: string) => {
     setLoading(true)
     setError(null)
@@ -46,6 +52,42 @@ export default function App(): JSX.Element {
       if (lastFile) loadFile(lastFile)
     })
   }, [loadFile])
+
+  // Register auto-updater event listeners
+  useEffect(() => {
+    const unsubAvailable = window.api.onUpdateAvailable((info) => {
+      setUpdateVersion(info.version)
+      setUpdateStatus('available')
+    })
+    const unsubNotAvailable = window.api.onUpdateNotAvailable(() => {
+      setUpdateStatus('idle')
+    })
+    const unsubProgress = window.api.onDownloadProgress((progress) => {
+      setUpdateStatus('downloading')
+      setDownloadProgress(Math.round(progress.percent))
+    })
+    const unsubDownloaded = window.api.onUpdateDownloaded((info) => {
+      setUpdateVersion(info.version)
+      setUpdateStatus('downloaded')
+    })
+    const unsubError = window.api.onUpdaterError((msg) => {
+      setUpdateError(msg)
+      setUpdateStatus('error')
+    })
+    return () => {
+      unsubAvailable()
+      unsubNotAvailable()
+      unsubProgress()
+      unsubDownloaded()
+      unsubError()
+    }
+  }, [])
+
+  const handleCheckForUpdates = async (): Promise<void> => {
+    setUpdateStatus('checking')
+    setUpdateError(null)
+    await window.api.checkForUpdates()
+  }
 
   const handleSelectFile = async (): Promise<void> => {
     const path = await window.api.selectFile()
@@ -84,6 +126,40 @@ export default function App(): JSX.Element {
             ↺ Herladen
           </button>
         )}
+        <div className="update-area">
+          {(updateStatus === 'idle' || updateStatus === 'checking') && (
+            <button
+              className="btn btn-secondary"
+              onClick={handleCheckForUpdates}
+              disabled={updateStatus === 'checking'}
+            >
+              🔄 {updateStatus === 'checking' ? 'Controleren…' : 'Controleer op updates'}
+            </button>
+          )}
+          {updateStatus === 'available' && (
+            <div className="update-banner">
+              ⬇ Versie {updateVersion} beschikbaar – Downloaden…
+            </div>
+          )}
+          {updateStatus === 'downloading' && (
+            <div className="update-banner">
+              <span>⬇ Downloaden… {downloadProgress}%</span>
+              <div className="update-progress">
+                <div className="update-progress-bar" style={{ width: `${downloadProgress}%` }} />
+              </div>
+            </div>
+          )}
+          {updateStatus === 'downloaded' && (
+            <button className="btn btn-update" onClick={() => window.api.quitAndInstall()}>
+              ✅ Versie {updateVersion} gereed – Installeer nu
+            </button>
+          )}
+          {updateStatus === 'error' && (
+            <span className="update-error" title={updateError ?? ''}>
+              ⚠ Update mislukt
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="app-body">

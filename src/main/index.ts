@@ -220,10 +220,56 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
-  // Auto-updater (only in production)
-  if (!is.dev) {
-    autoUpdater.checkForUpdatesAndNotify()
+  // Auto-updater setup
+  function sendToAllWindows(channel: string, data?: unknown): void {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.webContents.isDestroyed()) {
+        win.webContents.send(channel, data)
+      }
+    })
   }
+
+  autoUpdater.on('update-available', (info) => {
+    sendToAllWindows('updater:update-available', { version: info.version, releaseDate: info.releaseDate })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    sendToAllWindows('updater:update-not-available')
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    sendToAllWindows('updater:download-progress', {
+      percent: progress.percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendToAllWindows('updater:update-downloaded', { version: info.version })
+  })
+
+  autoUpdater.on('error', (err) => {
+    sendToAllWindows('updater:error', err?.message ?? String(err))
+  })
+
+  ipcMain.handle('updater:check', async () => {
+    try {
+      if (is.dev) {
+        sendToAllWindows('updater:update-not-available')
+        return null
+      }
+      return await autoUpdater.checkForUpdates()
+    } catch (err) {
+      sendToAllWindows('updater:error', (err as Error)?.message ?? String(err))
+      return null
+    }
+  })
+
+  ipcMain.handle('updater:quit-and-install', () => {
+    autoUpdater.quitAndInstall()
+  })
 })
 
 app.on('window-all-closed', () => {

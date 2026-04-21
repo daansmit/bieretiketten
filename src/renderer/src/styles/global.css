@@ -158,6 +158,64 @@ html, body, #root {
   color: var(--gray-800);
 }
 .btn-secondary:hover { background: var(--gray-400); color: var(--white); }
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.btn-secondary:disabled:hover { background: var(--gray-200); color: var(--gray-800); }
+
+.btn-update {
+  background: #4a8c3f;
+  color: var(--white);
+}
+.btn-update:hover { background: #3d7534; }
+
+/* ===== Update Area ===== */
+.update-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: var(--amber-light);
+  color: var(--brown-deep);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.update-progress {
+  width: 80px;
+  height: 6px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.update-progress-bar {
+  height: 100%;
+  background: var(--brown-deep);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.update-error {
+  font-size: 12px;
+  color: #b00020;
+  cursor: help;
+  padding: 4px 8px;
+  background: #fdecea;
+  border-radius: var(--radius);
+  border: 1px solid #f5c6cb;
+}
 
 /* ===== Column Visibility Toggle Bar ===== */
 .column-toggle-bar {
