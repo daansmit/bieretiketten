@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 export interface BierRow {
@@ -18,6 +18,13 @@ export interface Api {
   readExcel: (filePath: string) => Promise<{ success: boolean; rows?: BierRow[]; error?: string }>
   listImages: (dirPath: string, pagina: string | number) => Promise<string[]>
   openFile: (filePath: string) => Promise<void>
+  checkForUpdates: () => Promise<void>
+  quitAndInstall: () => Promise<void>
+  onUpdateAvailable: (cb: (info: { version: string; releaseDate?: string }) => void) => () => void
+  onUpdateNotAvailable: (cb: () => void) => () => void
+  onDownloadProgress: (cb: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+  onUpdateDownloaded: (cb: (info: { version: string }) => void) => () => void
+  onUpdaterError: (cb: (msg: string) => void) => () => void
 }
 
 const api: Api = {
@@ -26,7 +33,34 @@ const api: Api = {
   readExcel: (filePath: string) => ipcRenderer.invoke('excel:read', filePath),
   listImages: (dirPath: string, pagina: string | number) =>
     ipcRenderer.invoke('files:listImages', dirPath, pagina),
-  openFile: (filePath: string) => ipcRenderer.invoke('shell:openFile', filePath)
+  openFile: (filePath: string) => ipcRenderer.invoke('shell:openFile', filePath),
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+  quitAndInstall: () => ipcRenderer.invoke('updater:quit-and-install'),
+  onUpdateAvailable: (cb) => {
+    const listener = (_e: IpcRendererEvent, info: { version: string; releaseDate?: string }) => cb(info)
+    ipcRenderer.on('updater:update-available', listener)
+    return () => ipcRenderer.removeListener('updater:update-available', listener)
+  },
+  onUpdateNotAvailable: (cb) => {
+    const listener = () => cb()
+    ipcRenderer.on('updater:update-not-available', listener)
+    return () => ipcRenderer.removeListener('updater:update-not-available', listener)
+  },
+  onDownloadProgress: (cb) => {
+    const listener = (_e: IpcRendererEvent, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => cb(progress)
+    ipcRenderer.on('updater:download-progress', listener)
+    return () => ipcRenderer.removeListener('updater:download-progress', listener)
+  },
+  onUpdateDownloaded: (cb) => {
+    const listener = (_e: IpcRendererEvent, info: { version: string }) => cb(info)
+    ipcRenderer.on('updater:update-downloaded', listener)
+    return () => ipcRenderer.removeListener('updater:update-downloaded', listener)
+  },
+  onUpdaterError: (cb) => {
+    const listener = (_e: IpcRendererEvent, msg: string) => cb(msg)
+    ipcRenderer.on('updater:error', listener)
+    return () => ipcRenderer.removeListener('updater:error', listener)
+  }
 }
 
 if (process.contextIsolated) {
