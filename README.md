@@ -71,7 +71,7 @@ npm run dist
 | [electron-vite](https://electron-vite.org/) | Vite-integratie voor Electron |
 | [React](https://react.dev/) | UI-library |
 | [TanStack Table](https://tanstack.com/table) | Tabelcomponent met sortering & filteren |
-| [SheetJS (xlsx)](https://sheetjs.com/) | Lezen van Excel-bestanden |
+| [ExcelJS](https://github.com/exceljs/exceljs) | Lezen van Excel-bestanden |
 | [electron-updater](https://www.electron.build/auto-update) | Automatische updates via GitHub |
 | [electron-builder](https://www.electron.build/) | Pakkettering voor macOS en Windows |
 

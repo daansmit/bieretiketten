@@ -2,8 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
-import { readFileSync, readdirSync, existsSync, writeFileSync } from 'fs'
-import * as XLSX from 'xlsx'
+import { readdirSync, existsSync, readFileSync, writeFileSync } from 'fs'
+import ExcelJS from 'exceljs'
 
 // Simple JSON-based persistent store (avoids extra dependency)
 const storePath = join(app.getPath('userData'), 'settings.json')
@@ -93,13 +93,30 @@ app.whenReady().then(() => {
   })
 
   // IPC: Read Excel file and return rows as JSON
-  ipcMain.handle('excel:read', (_event, filePath: string) => {
+  ipcMain.handle('excel:read', async (_event, filePath: string) => {
     try {
-      const buffer = readFileSync(filePath)
-      const workbook = XLSX.read(buffer, { type: 'buffer' })
-      const sheetName = workbook.SheetNames[0]
-      const sheet = workbook.Sheets[sheetName]
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
+      const workbook = new ExcelJS.Workbook()
+      await workbook.xlsx.readFile(filePath)
+      const sheet = workbook.worksheets[0]
+
+      // Read header row (row 1) to build column-name map
+      const headerRow = sheet.getRow(1)
+      const headers: string[] = []
+      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        headers[colNumber - 1] = String(cell.value ?? '').toLowerCase().trim()
+      })
+
+      const rows: Record<string, unknown>[] = []
+      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber === 1) return // skip header
+        const obj: Record<string, unknown> = {}
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const key = headers[colNumber - 1]
+          if (key) obj[key] = cell.value ?? ''
+        })
+        rows.push(obj)
+      })
+
       return { success: true, rows }
     } catch (err) {
       return { success: false, error: String(err) }
