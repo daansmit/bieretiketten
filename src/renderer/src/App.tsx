@@ -131,11 +131,11 @@ export default function App(): JSX.Element {
       </header>
 
       <div className="file-bar">
-        <button className="btn btn-primary" onClick={handleSelectFile}>
-          📂 Excel bestand openen
-        </button>
         <button className="btn btn-secondary" onClick={handleSelectPhotosDir}>
           🖼 {photosDir ? basename(photosDir) : "Fotos map selecteren"}
+        </button>
+        <button className="btn btn-primary" onClick={handleSelectFile}>
+          📂 Excel bestand openen
         </button>
         <span className="file-path">
           {filePath ?? "Geen bestand geselecteerd"}
