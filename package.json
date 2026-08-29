@@ -7,14 +7,15 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "electron-updater": "^6.1.7",
     "@tanstack/react-table": "^8.11.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "exceljs": "^4.4.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.0",
@@ -44,10 +45,20 @@
     ],
     "mac": {
       "category": "public.app-category.utilities",
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "win": {
-      "target": ["nsis", "zip"]
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     }
   }
 }

@@ -8,10 +8,11 @@ import {
   net,
 } from "electron";
 import { join } from "path";
+import { pathToFileURL } from "url";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import { autoUpdater } from "electron-updater";
 import { readdirSync, existsSync, readFileSync, writeFileSync } from "fs";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 
 // Simple JSON-based persistent store (avoids extra dependency)
 const storePath = join(app.getPath("userData"), "settings.json");
@@ -43,46 +44,6 @@ function storeSet(key: string, value: unknown): void {
   const data = readStore();
   data[key] = value;
   writeStore(data);
-}
-
-/**
- * Convert an ExcelJS CellValue to a plain string or number.
- * ExcelJS can return rich-text objects, formula objects, hyperlink objects,
- * error objects, or Dates — none of which JSON-serialise to readable text.
- */
-function extractCellValue(value: ExcelJS.CellValue): string | number {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return value;
-  if (typeof value === "boolean") return String(value);
-  if (value instanceof Date) return value.toLocaleDateString("nl-NL");
-
-  // RichText: { richText: Array<{ text: string, font?: ... }> }
-  if (typeof value === "object" && "richText" in value) {
-    return (value as ExcelJS.CellRichTextValue).richText
-      .map((rt) => rt.text)
-      .join("");
-  }
-
-  // Formula: { formula: string, result?: CellValue }
-  if (typeof value === "object" && "formula" in value) {
-    const result = (value as ExcelJS.CellFormulaValue).result;
-    if (result === null || result === undefined) return "";
-    return extractCellValue(result as ExcelJS.CellValue);
-  }
-
-  // Hyperlink: { text: string | CellRichTextValue, hyperlink: string }
-  if (typeof value === "object" && "hyperlink" in value) {
-    const text = (value as ExcelJS.CellHyperlinkValue).text;
-    return typeof text === "string"
-      ? text
-      : extractCellValue(text as ExcelJS.CellValue);
-  }
-
-  // Error: { error: string }
-  if (typeof value === "object" && "error" in value) return "";
-
-  return String(value);
 }
 
 function createWindow(): void {
@@ -120,10 +81,8 @@ app.whenReady().then(() => {
   // Register custom protocol so the renderer can load local files
   // (needed because in dev the page loads from http://localhost which blocks file://)
   protocol.handle("local-file", (request) => {
-    const filePath = decodeURIComponent(
-      request.url.slice("local-file://".length),
-    );
-    return net.fetch(`file://${filePath}`);
+    const filePath = new URL(request.url).searchParams.get("p") ?? "";
+    return net.fetch(pathToFileURL(filePath).href);
   });
 
   electronApp.setAppUserModelId("com.daansmit.bieretiketten");
@@ -152,9 +111,9 @@ app.whenReady().then(() => {
   // IPC: Read Excel file and return rows as JSON
   ipcMain.handle("excel:read", async (_event, filePath: string) => {
     try {
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.readFile(filePath);
-      const sheet = workbook.worksheets[0];
+      const workbook = XLSX.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const ws = workbook.Sheets[sheetName];
 
       // Map known Excel header names (normalised) to canonical field keys.
       // The sheet has a header row (row 1) with 10 columns:
@@ -173,40 +132,56 @@ app.whenReady().then(() => {
         lettercode: "letter",
       };
 
+      const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
+
       // Build column-index → canonical-key map from the header row
-      const headerRow = sheet.getRow(1);
       const colKeyMap: Record<number, string> = {};
-      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const raw = String(cell.value ?? "")
+      const detectedHeaders: string[] = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r: range.s.r, c });
+        const cell = ws[cellRef];
+        // Strip BOM and other invisible characters Windows Excel may prepend
+        const raw = String(cell?.v ?? "")
+          .replace(/^\uFEFF/, "")
           .toLowerCase()
           .trim();
+        detectedHeaders.push(raw);
         const key = HEADER_MAP[raw];
-        if (key) colKeyMap[colNumber] = key;
-      });
+        if (key) colKeyMap[c] = key;
+      }
+
+      // If no columns were recognised, the file likely has different headers
+      if (Object.keys(colKeyMap).length === 0) {
+        return {
+          success: false,
+          error: `Geen bekende kolomnamen gevonden in het Excel bestand. Gevonden koppen: ${detectedHeaders.join(", ")}`,
+        };
+      }
 
       const rows: Record<string, unknown>[] = [];
-      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-        if (rowNumber === 1) return; // skip header
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
         const obj: Record<string, unknown> = {};
-        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          const key = colKeyMap[colNumber];
-          if (!key) return;
+        let hasData = false;
+        for (const [colStr, key] of Object.entries(colKeyMap)) {
+          const c = Number(colStr);
+          const cellRef = XLSX.utils.encode_cell({ r, c });
+          const cell = ws[cellRef];
+          if (!cell) continue;
+          hasData = true;
           // Percentage cells are stored as decimals (e.g. 0.065 for 6,5%).
           // Format them as Dutch percentage strings.
-          if (
-            cell.numFmt &&
-            cell.numFmt.includes("%") &&
-            typeof cell.value === "number"
-          ) {
-            const pct = cell.value * 100;
+          if (cell.t === "n" && cell.z && cell.z.includes("%")) {
+            const pct = (cell.v as number) * 100;
             obj[key] =
               pct.toLocaleString("nl-NL", { maximumFractionDigits: 1 }) + "%";
+          } else if (cell.t === "d") {
+            obj[key] = (cell.v as Date).toLocaleDateString("nl-NL");
           } else {
-            obj[key] = extractCellValue(cell.value);
+            obj[key] = cell.v == null ? "" : String(cell.v);
           }
-        });
-        rows.push(obj);
-      });
+        }
+        if (hasData) rows.push(obj);
+      }
 
       return { success: true, rows };
     } catch (err) {
@@ -234,8 +209,8 @@ app.whenReady().then(() => {
   // Supports two layouts:
   //   1. Subdirectories with range names like "map 04. 211-280" containing the files.
   //   2. Flat directory where files sit directly.
-  // File naming patterns tried (in order): "Pagina {n}.jpg", "Pagina {n}.BMP",
-  //   "{n}.pdf", "{n}.jpg", "{n}.BMP".
+  // File naming patterns tried (in order): "Pagina {n}.pdf", "Pagina {n}.jpg",
+  //   "Pagina {n}.BMP", "{n}.pdf", "{n}.jpg", "{n}.BMP".
   ipcMain.handle(
     "files:listImages",
     (_event, dirPath: string, pagina: string | number) => {
@@ -271,11 +246,14 @@ app.whenReady().then(() => {
 
         // Try file name patterns in order; return first match
         const candidates = [
+          `Pagina ${paginaStr}.pdf`,
           `Pagina ${paginaStr}.jpg`,
+          `Pagina ${paginaStr}.png`,
           `Pagina ${paginaStr}.BMP`,
           `Pagina ${paginaStr}.bmp`,
           `${paginaStr}.pdf`,
           `${paginaStr}.jpg`,
+          `${paginaStr}.png`,
           `${paginaStr}.BMP`,
           `${paginaStr}.bmp`,
         ];

@@ -7,7 +7,6 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
-  type ColumnFiltersState,
   type VisibilityState,
 } from "@tanstack/react-table";
 import type { BierRow } from "../App";
@@ -21,19 +20,18 @@ interface Props {
 const COLUMNS: {
   key: keyof BierRow;
   label: string;
-  filterable: boolean;
   width?: number;
 }[] = [
-  { key: "naam", label: "Naam", filterable: true, width: 180 },
-  { key: "soort", label: "Soort", filterable: true, width: 130 },
-  { key: "brouwerij", label: "Brouwerij", filterable: true, width: 160 },
-  { key: "plaatsnaam", label: "Plaatsnaam", filterable: true, width: 130 },
-  { key: "land", label: "Land", filterable: true, width: 110 },
-  { key: "alcohol", label: "Alcohol", filterable: true, width: 80 },
-  { key: "categorie", label: "Categorie", filterable: true, width: 110 },
-  { key: "kleur", label: "Kleur", filterable: true, width: 90 },
-  { key: "pagina", label: "Pagina", filterable: true, width: 70 },
-  { key: "letter", label: "Letter", filterable: false, width: 60 },
+  { key: "naam", label: "Naam", width: 180 },
+  { key: "soort", label: "Soort", width: 130 },
+  { key: "brouwerij", label: "Brouwerij", width: 160 },
+  { key: "plaatsnaam", label: "Plaatsnaam", width: 130 },
+  { key: "land", label: "Land", width: 110 },
+  { key: "alcohol", label: "Alcohol", width: 80 },
+  { key: "categorie", label: "Categorie", width: 110 },
+  { key: "kleur", label: "Kleur", width: 90 },
+  { key: "pagina", label: "Pagina", width: 70 },
+  { key: "letter", label: "Letter", width: 60 },
 ];
 
 // Columns hidden by default
@@ -42,16 +40,48 @@ const DEFAULT_VISIBILITY: VisibilityState = {
   kleur: false,
 };
 
+// Split a search query into terms. Text between double quotes becomes a single
+// literal phrase; everything else is split on whitespace into separate words.
+// A row must match every term, and a term matches when it is a substring of
+// any single column value. So `Heineken 2021` matches a Heineken on page 2021
+// (two words, different columns), but `"Heineken 2021"` only matches a cell
+// that literally contains "Heineken 2021".
+function parseSearchTerms(query: string): string[] {
+  const terms: string[] = [];
+  const regex = /"([^"]*)"|(\S+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(query)) !== null) {
+    const term = (match[1] ?? match[2]).trim().toLowerCase();
+    if (term) terms.push(term);
+  }
+  return terms;
+}
+
+function rowMatchesSearch(row: BierRow, terms: string[]): boolean {
+  if (terms.length === 0) return true;
+  const values = COLUMNS.map((col) => String(row[col.key] ?? "").toLowerCase());
+  return terms.every((term) => values.some((value) => value.includes(term)));
+}
+
 export function BierTable({
   rows,
   selectedRow,
   onRowSelect,
 }: Props): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  // `searchInput` updates on every keystroke so the field stays responsive.
+  // `globalFilter` lags behind it (debounced) and is what actually drives the
+  // expensive row filtering — important because the dataset is large.
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [globalFilter, setGlobalFilter] = useState<string>("");
   const [columnVisibility, setColumnVisibility] =
     useState<VisibilityState>(DEFAULT_VISIBILITY);
+
+  // Debounce: apply the typed text to the filter 300ms after typing stops.
+  useEffect(() => {
+    const id = setTimeout(() => setGlobalFilter(searchInput), 300);
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
   const columns = useMemo<ColumnDef<BierRow>[]>(
     () =>
@@ -59,44 +89,37 @@ export function BierTable({
         accessorKey: col.key,
         header: col.label,
         size: col.width,
-        enableColumnFilter: col.filterable,
-        filterFn: "includesString",
       })),
     [],
   );
 
+  const data = useMemo(() => {
+    const terms = parseSearchTerms(globalFilter);
+    if (terms.length === 0) return rows;
+    return rows.filter((row) => rowMatchesSearch(row, terms));
+  }, [rows, globalFilter]);
+
   const table = useReactTable({
-    data: rows,
+    data,
     columns,
-    state: { sorting, columnFilters, columnVisibility },
+    state: { sorting, columnVisibility },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleFilterChange = (key: string, value: string): void => {
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
-    table.getColumn(key)?.setFilterValue(value || undefined);
-  };
-
   const handleClearFilters = (): void => {
-    setFilterValues({});
-    setColumnFilters([]);
+    setSearchInput("");
+    setGlobalFilter("");
   };
 
-  const hasActiveFilters = Object.values(filterValues).some((v) => v !== "");
-
-  // Only show filter inputs for filterable columns that are currently visible
-  const visibleFilterableColumns = COLUMNS.filter(
-    (c) => c.filterable && columnVisibility[c.key] !== false,
-  );
+  const hasActiveFilters = searchInput !== "";
 
   const filteredRows = table.getFilteredRowModel().rows;
-  const visibleRows = filteredRows.slice(0, 1000);
-  const tooManyRows = filteredRows.length > 1000;
+  const visibleRows = filteredRows.slice(0, 5000);
+  const tooManyRows = filteredRows.length > 5000;
 
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
 
@@ -161,22 +184,16 @@ export function BierTable({
 
       {/* Filter Bar */}
       <div className="filter-bar">
-        {visibleFilterableColumns.map((col) => (
-          <div
-            className="filter-group"
-            key={col.key}
-            style={{ width: col.width }}
-          >
-            <label htmlFor={`filter-${col.key}`}>{col.label}</label>
-            <input
-              id={`filter-${col.key}`}
-              type="text"
-              placeholder={`Zoek…`}
-              value={filterValues[col.key] ?? ""}
-              onChange={(e) => handleFilterChange(col.key, e.target.value)}
-            />
-          </div>
-        ))}
+        <div className="filter-group filter-group-search">
+          <label htmlFor="filter-global">Zoeken</label>
+          <input
+            id="filter-global"
+            type="text"
+            placeholder={'Zoek in alle kolommen…  (gebruik "…" voor exacte tekst)'}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
         {hasActiveFilters && (
           <button
             className="btn btn-secondary clear-btn"
@@ -193,7 +210,7 @@ export function BierTable({
           <span className="icon">🔍</span>
           <p>
             <strong>{filteredRows.length.toLocaleString("nl-NL")}</strong>{" "}
-            resultaten gevonden. Verfijn de filter om minder dan 1.000 etiketten
+            resultaten gevonden. Verfijn de filter om minder dan 3.000 etiketten
             te tonen.
           </p>
         </div>
