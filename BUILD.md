@@ -1,8 +1,10 @@
 # Building & deploying Bieretiketten
 
-This app runs for **one user on his Windows laptop**. We build on macOS and transfer via USB stick.
+This app runs for **one user on his Windows laptop**. We build on macOS. The first
+install goes over via USB stick; after that, updates arrive through the in-app
+"check for updates" button (see [Releasing an update](#releasing-an-update)).
 
-## Build the Windows version (do this one)
+## Build the Windows installer
 
 ```sh
 npm install     # first time only
@@ -12,24 +14,60 @@ npm run dist:win
 - `npm run dist:win` = `electron-vite build` + `electron-builder --win`.
 - The `--win` flag is baked into the script because it's **required** when building on a
   Mac — without it, electron-builder defaults to Mac targets and you won't get a Windows build.
-- Output lands in `dist/`. The file to ship is:
+- Output lands in `dist/`. The file to ship is the installer:
 
   ```
-  dist/Bieretiketten-1.0.0-win.zip
+  dist/Bieretiketten Setup <version>.exe
   ```
 
-  (This is a `zip` target, architecture **x64** — see `build.win` in `package.json`.)
+  (NSIS installer, architecture **x64** — see `build.win` / `build.nsis` in `package.json`.
+  It's a one-click installer: double-clicking installs to the user's AppData and creates
+  desktop + start-menu shortcuts. No unzipping.)
 
-## Deploy to the laptop
+> **Heads up (Mac terminal):** if you build from a Claude Code / VS Code terminal you may
+> hit `Cannot read properties of undefined (reading 'isPackaged')` or a silent failure —
+> the environment sets `ELECTRON_RUN_AS_NODE=1`, which breaks Electron. Prefix commands
+> with `unset ELECTRON_RUN_AS_NODE`.
 
-1. Copy `dist/Bieretiketten-1.0.0-win.zip` to a USB stick.
-2. On his Windows laptop, unzip it.
-3. Run `Bieretiketten.exe` from the unzipped folder.
+## First install on the laptop (USB)
+
+1. Copy `dist/Bieretiketten Setup <version>.exe` to a USB stick.
+2. On his Windows laptop, double-click it. It installs and launches automatically.
+
+## Releasing an update (in-app auto-update)
+
+The app uses `electron-updater`, which checks the **GitHub Releases** of
+`daansmit/bieretiketten`. For the in-app button to detect an update, the release must
+contain the installer **and** the `latest.yml` metadata file — `electron-builder --publish`
+uploads both. Do **not** create the release by hand in the GitHub UI (it would omit
+`latest.yml`).
+
+1. **Bump `version`** in `package.json` (e.g. `1.0.1` → `1.0.2`). The updater only offers
+   an update when the release version is *higher* than what's installed.
+2. **Build + publish** in one command:
+
+   ```sh
+   GH_TOKEN=<token> npm run build && npx electron-builder --win --publish always
+   ```
+
+   This creates a **draft** GitHub release for the version with `Bieretiketten Setup
+   <version>.exe`, `latest.yml`, and the blockmap attached.
+3. **Publish the draft** in the GitHub Releases UI. Once it's public, the laptop's
+   "check for updates" button will find it, download, and install.
+
+### GitHub token
+
+`GH_TOKEN` can be a fine-grained personal access token scoped to **only** the
+`bieretiketten` repo with:
+
+- **Contents: Read and write** (GitHub files Releases under Contents)
+- **Metadata: Read-only** (auto-selected)
+
+Nothing else is needed. Keep the token out of git (use a gitignored `.env` or your shell
+profile). Alternatively `GH_TOKEN=$(gh auth token)` reuses the `gh` CLI login.
 
 ## Notes
 
-- **x64, not arm64.** An early build (`Bieretiketten-1.0.0-arm64-win.zip`) was ARM64;
-  we switched to x64 in `package.json` because that's what his laptop needs. If you ever
-  see an `arm64-win` zip, that's the wrong one.
-- Bump the `version` in `package.json` before rebuilding so the filename reflects the new version.
+- **x64, not arm64.** An early build was ARM64; we use x64 because that's what his laptop
+  needs. If you ever see an `arm64-win` artifact, that's the wrong one.
 - Building the Mac version (for local testing) is just `npm run dist` (no flag).

@@ -1,6 +1,6 @@
 {
   "name": "bieretiketten",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Bier etiketten beheer voor Sjef",
   "main": "out/main/index.js",
   "scripts": {
@@ -53,12 +53,19 @@
     "win": {
       "target": [
         {
-          "target": "zip",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   }
 }

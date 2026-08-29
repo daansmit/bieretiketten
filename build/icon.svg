@@ -1,0 +1,61 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f6ead4"/>
+      <stop offset="1" stop-color="#ecd9bb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Cream background squircle -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Ornate label cartouche: stepped top & bottom plateaus, rounded corners -->
+  <path id="label" d="M220 196 L372 196 L372 174 Q372 140 406 140 L618 140 Q652 140 652 174
+    L652 196 L804 196 Q856 196 856 248 L856 776 Q856 828 804 828 L652 828 L652 850
+    Q652 884 618 884 L406 884 Q372 884 372 850 L372 828 L220 828 Q168 828 168 776
+    L168 248 Q168 196 220 196 Z" fill="#45312a"/>
+
+  <!-- Coral frame (inset) -->
+  <g transform="translate(512 512) scale(0.955) translate(-512 -512)">
+    <use href="#label" fill="none" stroke="#cf6440" stroke-width="12"/>
+  </g>
+  <!-- Gold frame (further inset) -->
+  <g transform="translate(512 512) scale(0.9) translate(-512 -512)">
+    <use href="#label" fill="none" stroke="#d99a33" stroke-width="6"/>
+  </g>
+
+  <!-- Corner rivets -->
+  <g fill="#cf6440">
+    <circle cx="248" cy="266" r="9"/>
+    <circle cx="776" cy="266" r="9"/>
+    <circle cx="248" cy="762" r="9"/>
+    <circle cx="776" cy="762" r="9"/>
+  </g>
+
+  <!-- Upper & lower gold divider lines -->
+  <g stroke="#d99a33" stroke-width="6" stroke-linecap="round">
+    <line x1="286" y1="330" x2="738" y2="330"/>
+    <line x1="286" y1="694" x2="738" y2="694"/>
+  </g>
+
+  <!-- Central wheat ear emblem -->
+  <g>
+    <!-- stem -->
+    <path d="M512 560 L512 656" stroke="#d99a33" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <!-- base leaves -->
+    <path d="M512 636 Q470 632 452 604" stroke="#d99a33" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M512 636 Q554 632 572 604" stroke="#d99a33" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- grains -->
+    <g fill="#e7b04a">
+      <ellipse cx="512" cy="398" rx="15" ry="35"/>
+      <ellipse cx="488" cy="440" rx="13" ry="30" transform="rotate(-34 488 440)"/>
+      <ellipse cx="536" cy="440" rx="13" ry="30" transform="rotate(34 536 440)"/>
+      <ellipse cx="484" cy="486" rx="13" ry="30" transform="rotate(-34 484 486)"/>
+      <ellipse cx="540" cy="486" rx="13" ry="30" transform="rotate(34 540 486)"/>
+      <ellipse cx="484" cy="532" rx="13" ry="30" transform="rotate(-34 484 532)"/>
+      <ellipse cx="540" cy="532" rx="13" ry="30" transform="rotate(34 540 532)"/>
+      <ellipse cx="490" cy="576" rx="12" ry="27" transform="rotate(-34 490 576)"/>
+      <ellipse cx="534" cy="576" rx="12" ry="27" transform="rotate(34 534 576)"/>
+    </g>
+  </g>
+</svg>
