@@ -82,21 +82,6 @@ export function ImageViewer({ row, files, onClose }: Props): JSX.Element {
       </div>
 
       <div className="side-panel-content">
-        {/* Row info */}
-        <div className="row-info-card">
-          <div className="row-title">{row.naam || "—"}</div>
-          <div className="row-detail">
-            {[row.brouwerij, row.plaatsnaam, row.land]
-              .filter(Boolean)
-              .join(" · ")}
-          </div>
-          {row.alcohol !== "" && (
-            <div className="row-detail">
-              🍺 {row.alcohol}% · {row.soort}
-            </div>
-          )}
-        </div>
-
         {/* Debug panel */}
         {showDebug && (
           <div

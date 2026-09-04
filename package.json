@@ -1,6 +1,6 @@
 {
   "name": "bieretiketten",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Bier etiketten beheer voor Sjef",
   "main": "out/main/index.js",
   "scripts": {
