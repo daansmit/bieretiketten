@@ -277,6 +277,9 @@ app.whenReady().then(() => {
     shell.openPath(filePath);
   });
 
+  // IPC: Current app version (shown in the UI so the user can confirm updates)
+  ipcMain.handle("app:getVersion", () => app.getVersion());
+
   createWindow();
 
   app.on("activate", () => {

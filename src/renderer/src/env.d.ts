@@ -14,6 +14,7 @@ export interface BierApi {
   }>;
   listImages: (dirPath: string, pagina: string | number) => Promise<string[]>;
   openFile: (filePath: string) => Promise<void>;
+  getVersion: () => Promise<string>;
   checkForUpdates: () => Promise<void>;
   quitAndInstall: () => Promise<void>;
   onUpdateAvailable: (

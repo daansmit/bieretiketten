@@ -22,6 +22,7 @@ export interface Api {
   ) => Promise<{ success: boolean; rows?: BierRow[]; error?: string }>;
   listImages: (dirPath: string, pagina: string | number) => Promise<string[]>;
   openFile: (filePath: string) => Promise<void>;
+  getVersion: () => Promise<string>;
   checkForUpdates: () => Promise<void>;
   quitAndInstall: () => Promise<void>;
   onUpdateAvailable: (
@@ -50,6 +51,7 @@ const api: Api = {
     ipcRenderer.invoke("files:listImages", dirPath, pagina),
   openFile: (filePath: string) =>
     ipcRenderer.invoke("shell:openFile", filePath),
+  getVersion: () => ipcRenderer.invoke("app:getVersion"),
   checkForUpdates: () => ipcRenderer.invoke("updater:check"),
   quitAndInstall: () => ipcRenderer.invoke("updater:quit-and-install"),
   onUpdateAvailable: (cb) => {

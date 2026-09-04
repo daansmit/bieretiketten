@@ -37,6 +37,7 @@ export default function App(): JSX.Element {
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>("");
 
   const loadFile = useCallback(async (path: string) => {
     setLoading(true);
@@ -61,6 +62,7 @@ export default function App(): JSX.Element {
     window.api.getPhotosDir().then((dir) => {
       if (dir) setPhotosDir(dir);
     });
+    window.api.getVersion().then(setAppVersion);
   }, [loadFile]);
 
   // Register auto-updater event listeners
@@ -149,6 +151,7 @@ export default function App(): JSX.Element {
           </button>
         )}
         <div className="update-area">
+          {appVersion && <span className="app-version">v{appVersion}</span>}
           {(updateStatus === "idle" || updateStatus === "checking") && (
             <button
               className="btn btn-secondary"
