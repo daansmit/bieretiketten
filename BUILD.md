@@ -42,9 +42,13 @@ contain the installer **and** the `latest.yml` metadata file — `electron-build
 uploads both. Do **not** create the release by hand in the GitHub UI (it would omit
 `latest.yml`).
 
-1. **Bump `version`** in `package.json` (e.g. `1.0.1` → `1.0.2`). The updater only offers
+1. **Bump `version`** in `package.json` (e.g. `1.0.2` → `1.0.3`). The updater only offers
    an update when the release version is *higher* than what's installed.
-2. **Build + publish** in one command:
+2. **Commit and push `main`** *before* publishing. This matters: GitHub creates the
+   `vX.Y.Z` git tag at the moment the draft is published, pointing at the tip of `main`
+   on the remote. If you haven't pushed yet, the tag lands on the *previous* commit and
+   you'll have to force-move it. So: `git commit … && git push origin main`.
+3. **Build + publish** in one command:
 
    ```sh
    GH_TOKEN=<token> npm run build && npx electron-builder --win --publish always
@@ -52,8 +56,9 @@ uploads both. Do **not** create the release by hand in the GitHub UI (it would o
 
    This creates a **draft** GitHub release for the version with `Bieretiketten Setup
    <version>.exe`, `latest.yml`, and the blockmap attached.
-3. **Publish the draft** in the GitHub Releases UI. Once it's public, the laptop's
-   "check for updates" button will find it, download, and install.
+4. **Publish the draft** — in the GitHub Releases UI, or `gh release edit vX.Y.Z --draft=false`.
+   Because `main` is already pushed, the tag lands on the right commit. Once public, the
+   laptop's "check for updates" button will find it, download, and install.
 
 ### GitHub token
 
