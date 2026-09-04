@@ -144,33 +144,47 @@ app.whenReady().then(() => {
       const sheetName = workbook.SheetNames[0];
       const ws = workbook.Sheets[sheetName];
 
-      // Columns are always in the same fixed order, so we map by position
-      // (column index) instead of by header name. This keeps working even when
-      // the header labels in the Excel file get renamed. Row 1 is the header
-      // and is skipped below; any columns beyond these are ignored.
-      //   0 Naam | 1 Soort | 2 Brouwerij | 3 Plaatsnaam | 4 Land |
-      //   5 Alcohol | 6 Categorie | 7 Kleur | 8 Pagina | 9 Lettercode
-      const COLUMN_ORDER = [
-        "naam",
-        "soort",
-        "brouwerij",
-        "plaatsnaam",
-        "land",
-        "alcohol",
-        "categorie",
-        "kleur",
-        "pagina",
-        "letter",
-      ];
+      // Map known Excel header names (normalised) to canonical field keys.
+      // The sheet has a header row (row 1) with 10 columns:
+      //   Naam bieren | Soort bier | Brouwerij | Plaatsnaam | Land |
+      //   Alcoh.%     | Categorie  | Kleur      | Pagina     | Lettercode
+      const HEADER_MAP: Record<string, string> = {
+        "naam bieren": "naam",
+        "soort bier": "soort",
+        brouwerij: "brouwerij",
+        plaatsnaam: "plaatsnaam",
+        land: "land",
+        "alcoh.%": "alcohol",
+        categorie: "categorie",
+        kleur: "kleur",
+        pagina: "pagina",
+        lettercode: "letter",
+      };
 
       const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
 
-      // Build column-index → canonical-key map by position
+      // Build column-index → canonical-key map from the header row
       const colKeyMap: Record<number, string> = {};
-      for (let i = 0; i < COLUMN_ORDER.length; i++) {
-        const c = range.s.c + i;
-        if (c > range.e.c) break;
-        colKeyMap[c] = COLUMN_ORDER[i];
+      const detectedHeaders: string[] = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r: range.s.r, c });
+        const cell = ws[cellRef];
+        // Strip BOM and other invisible characters Windows Excel may prepend
+        const raw = String(cell?.v ?? "")
+          .replace(/^\uFEFF/, "")
+          .toLowerCase()
+          .trim();
+        detectedHeaders.push(raw);
+        const key = HEADER_MAP[raw];
+        if (key) colKeyMap[c] = key;
+      }
+
+      // If no columns were recognised, the file likely has different headers
+      if (Object.keys(colKeyMap).length === 0) {
+        return {
+          success: false,
+          error: `Geen bekende kolomnamen gevonden in het Excel bestand. Gevonden koppen: ${detectedHeaders.join(", ")}`,
+        };
       }
 
       const rows: Record<string, unknown>[] = [];
