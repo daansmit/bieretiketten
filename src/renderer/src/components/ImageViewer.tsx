@@ -154,22 +154,26 @@ export function ImageViewer({ row, files, onClose }: Props): JSX.Element {
           </div>
         ))}
 
-        {/* PDFs */}
+        {/* PDFs — previewed inline via the built-in PDF viewer */}
         {pdfFiles.map((file) => (
           <div className="pdf-item" key={file}>
-            <span className="pdf-icon">📄</span>
-            <div className="pdf-info">
-              <div className="pdf-name" title={basename(file)}>
-                {basename(file)}
-              </div>
+            <div className="pdf-header">
+              <span className="pdf-name" title={basename(file)}>
+                📄 {basename(file)}
+              </span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => window.api.openFile(file)}
+                title="Openen in externe viewer"
+              >
+                ⤢ Openen
+              </button>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => window.api.openFile(file)}
-              title="Open PDF"
-            >
-              Openen
-            </button>
+            <iframe
+              className="pdf-frame"
+              src={toFileUrl(file)}
+              title={basename(file)}
+            />
           </div>
         ))}
       </div>

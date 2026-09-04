@@ -14,6 +14,23 @@ import { autoUpdater } from "electron-updater";
 import { readdirSync, existsSync, readFileSync, writeFileSync } from "fs";
 import * as XLSX from "xlsx";
 
+// Register the custom scheme as privileged so the renderer can embed local
+// files — needed for Chromium's built-in PDF viewer in an <iframe> (it uses
+// byte-range requests and expects a "standard", stream-capable scheme).
+// Must run before app "ready".
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "local-file",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true,
+    },
+  },
+]);
+
 // Simple JSON-based persistent store (avoids extra dependency)
 const storePath = join(app.getPath("userData"), "settings.json");
 
@@ -80,9 +97,21 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Register custom protocol so the renderer can load local files
   // (needed because in dev the page loads from http://localhost which blocks file://)
-  protocol.handle("local-file", (request) => {
+  protocol.handle("local-file", async (request) => {
     const filePath = new URL(request.url).searchParams.get("p") ?? "";
-    return net.fetch(pathToFileURL(filePath).href);
+    const response = await net.fetch(pathToFileURL(filePath).href);
+    // The built-in PDF viewer only activates when the response is served as
+    // application/pdf; net.fetch on a file URL doesn't reliably set that.
+    if (filePath.toLowerCase().endsWith(".pdf")) {
+      const headers = new Headers(response.headers);
+      headers.set("Content-Type", "application/pdf");
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    }
+    return response;
   });
 
   electronApp.setAppUserModelId("com.daansmit.bieretiketten");
