@@ -144,21 +144,28 @@ app.whenReady().then(() => {
       const sheetName = workbook.SheetNames[0];
       const ws = workbook.Sheets[sheetName];
 
-      // Map known Excel header names (normalised) to canonical field keys.
-      // The sheet has a header row (row 1) with 10 columns:
-      //   Naam bieren | Soort bier | Brouwerij | Plaatsnaam | Land |
-      //   Alcoh.%     | Categorie  | Kleur      | Pagina     | Lettercode
+      // Map known Excel header names (normalised: lowercased + trimmed) to
+      // canonical field keys. Columns are matched by header name, so the file
+      // may have them in any order and may omit optional ones (older sheets had
+      // extra "Categorie"/"Kleur" columns; newer ones don't). Several spellings
+      // are accepted per field because the header labels have changed over time
+      // (e.g. "Soort bier" -> "Soort", "Lettercode" -> "Letter").
       const HEADER_MAP: Record<string, string> = {
         "naam bieren": "naam",
+        naam: "naam",
         "soort bier": "soort",
+        soort: "soort",
         brouwerij: "brouwerij",
         plaatsnaam: "plaatsnaam",
         land: "land",
         "alcoh.%": "alcohol",
+        "alcohol%": "alcohol",
+        alcohol: "alcohol",
         categorie: "categorie",
         kleur: "kleur",
         pagina: "pagina",
         lettercode: "letter",
+        letter: "letter",
       };
 
       const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
