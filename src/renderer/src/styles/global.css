@@ -557,43 +557,27 @@ tbody td {
 .pdf-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 6px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
   background: var(--white);
   box-shadow: var(--shadow-sm);
 }
 
-.pdf-item .pdf-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pdf-item .pdf-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pdf-item .btn {
-  flex-shrink: 0;
-  padding: 5px 10px;
-  font-size: 12px;
-}
-
 .pdf-item .pdf-frame {
+  display: block;
   width: 100%;
-  height: 420px;
+  height: 460px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
   background: var(--gray-100);
+}
+
+.pdf-item .pdf-open-btn {
+  align-self: flex-end;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 .no-images {
@@ -666,26 +650,6 @@ tbody td {
 
 .lightbox-zoom:hover {
   background: rgba(255, 255, 255, 0.3);
-}
-
-/* ===== Row info card ===== */
-.row-info-card {
-  background: var(--amber-pale);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  font-size: 12px;
-}
-
-.row-info-card .row-title {
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--amber-dark);
-  margin-bottom: 6px;
-}
-
-.row-info-card .row-detail {
-  color: var(--text-muted);
 }
 
 /* ===== Scrollbar ===== */

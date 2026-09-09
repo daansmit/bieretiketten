@@ -82,21 +82,6 @@ export function ImageViewer({ row, files, onClose }: Props): JSX.Element {
       </div>
 
       <div className="side-panel-content">
-        {/* Row info */}
-        <div className="row-info-card">
-          <div className="row-title">{row.naam || "—"}</div>
-          <div className="row-detail">
-            {[row.brouwerij, row.plaatsnaam, row.land]
-              .filter(Boolean)
-              .join(" · ")}
-          </div>
-          {row.alcohol !== "" && (
-            <div className="row-detail">
-              🍺 {row.alcohol}% · {row.soort}
-            </div>
-          )}
-        </div>
-
         {/* Debug panel */}
         {showDebug && (
           <div
@@ -154,26 +139,24 @@ export function ImageViewer({ row, files, onClose }: Props): JSX.Element {
           </div>
         ))}
 
-        {/* PDFs — previewed inline via the built-in PDF viewer */}
+        {/* PDFs — previewed inline via the built-in PDF viewer.
+            No header here: the built-in viewer has its own toolbar and the
+            page number is already in the panel title, so the preview gets the
+            full column height (helps on smaller screens). */}
         {pdfFiles.map((file) => (
           <div className="pdf-item" key={file}>
-            <div className="pdf-header">
-              <span className="pdf-name" title={basename(file)}>
-                📄 {basename(file)}
-              </span>
-              <button
-                className="btn btn-secondary"
-                onClick={() => window.api.openFile(file)}
-                title="Openen in externe viewer"
-              >
-                ⤢ Openen
-              </button>
-            </div>
             <iframe
               className="pdf-frame"
               src={toFileUrl(file)}
               title={basename(file)}
             />
+            <button
+              className="btn btn-secondary pdf-open-btn"
+              onClick={() => window.api.openFile(file)}
+              title="Openen in externe viewer"
+            >
+              ⤢ Openen
+            </button>
           </div>
         ))}
       </div>
