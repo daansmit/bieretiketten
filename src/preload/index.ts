@@ -23,6 +23,8 @@ export interface Api {
   listImages: (dirPath: string, pagina: string | number) => Promise<string[]>;
   openFile: (filePath: string) => Promise<void>;
   getVersion: () => Promise<string>;
+  getDupeData: () => Promise<unknown>;
+  saveDupeData: (data: unknown) => Promise<void>;
   checkForUpdates: () => Promise<void>;
   quitAndInstall: () => Promise<void>;
   onUpdateAvailable: (
@@ -52,6 +54,8 @@ const api: Api = {
   openFile: (filePath: string) =>
     ipcRenderer.invoke("shell:openFile", filePath),
   getVersion: () => ipcRenderer.invoke("app:getVersion"),
+  getDupeData: () => ipcRenderer.invoke("dupe:get"),
+  saveDupeData: (data: unknown) => ipcRenderer.invoke("dupe:set", data),
   checkForUpdates: () => ipcRenderer.invoke("updater:check"),
   quitAndInstall: () => ipcRenderer.invoke("updater:quit-and-install"),
   onUpdateAvailable: (cb) => {

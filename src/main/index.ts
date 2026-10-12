@@ -316,6 +316,12 @@ app.whenReady().then(() => {
   // IPC: Current app version (shown in the UI so the user can confirm updates)
   ipcMain.handle("app:getVersion", () => app.getVersion());
 
+  // IPC: Duplicate-finder data (confirmed duplicates todo list + dismissed pairs)
+  ipcMain.handle("dupe:get", () => storeGet("dupeFinder"));
+  ipcMain.handle("dupe:set", (_event, data: unknown) => {
+    storeSet("dupeFinder", data);
+  });
+
   createWindow();
 
   app.on("activate", () => {

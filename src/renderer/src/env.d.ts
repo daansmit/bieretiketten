@@ -1,4 +1,5 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
+import type { DupeData } from "./lib/dedupe";
 
 export interface BierApi {
   selectFile: () => Promise<string | null>;
@@ -15,6 +16,8 @@ export interface BierApi {
   listImages: (dirPath: string, pagina: string | number) => Promise<string[]>;
   openFile: (filePath: string) => Promise<void>;
   getVersion: () => Promise<string>;
+  getDupeData: () => Promise<DupeData | null>;
+  saveDupeData: (data: DupeData) => Promise<void>;
   checkForUpdates: () => Promise<void>;
   quitAndInstall: () => Promise<void>;
   onUpdateAvailable: (

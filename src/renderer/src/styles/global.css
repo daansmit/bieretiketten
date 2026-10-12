@@ -667,3 +667,334 @@ tbody td {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--amber);
 }
+
+/* ===== Duplicate Finder ===== */
+.dupe-finder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--cream);
+}
+
+.dupe-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+.dupe-tab {
+  padding: 6px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--gray-100);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dupe-tab.active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--white);
+}
+.dupe-spacer {
+  flex: 1;
+}
+
+.dupe-review,
+.dupe-todo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dupe-setup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+.dupe-setup-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+.dupe-stats {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-left: 8px;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--amber);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 6px;
+}
+
+.dupe-actionbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--amber-pale);
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+.btn-same {
+  background: #4a8c3f;
+  color: var(--white);
+  border: 1px solid #3d7534;
+  font-weight: 700;
+}
+.btn-same:hover {
+  background: #3d7534;
+}
+.btn-diff {
+  background: var(--white);
+  color: #b4472c;
+  border: 1px solid #d7a99c;
+  font-weight: 700;
+}
+.btn-diff:hover {
+  background: #fdecea;
+}
+.dupe-actionbar kbd {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+}
+.dupe-progress {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.dupe-compare {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+.dupe-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dupe-data-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+.dupe-id {
+  font-size: 13px;
+  color: var(--amber-dark);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.dupe-field {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.dupe-field.matched {
+  background: var(--amber-pale);
+}
+.dupe-field-label {
+  flex: 0 0 90px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.dupe-field-value {
+  color: var(--text);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.dupe-img-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+}
+.dupe-img-banner {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  background: var(--amber);
+  color: var(--white);
+  font-size: 13px;
+}
+.dupe-img-banner strong {
+  font-size: 15px;
+}
+.dupe-img-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
+}
+.dupe-img-frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: var(--gray-100);
+}
+.dupe-zoom {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.dupe-zoom button {
+  width: 24px;
+  height: 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  background: var(--white);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.dupe-img-scroll {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  background: var(--gray-100);
+}
+.dupe-img-scroll img {
+  display: block;
+  max-width: none;
+}
+
+.dupe-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.dupe-placeholder .icon {
+  font-size: 40px;
+}
+
+/* Todo list */
+.dupe-todo-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+.dupe-todo-search {
+  flex: 1;
+  max-width: 320px;
+  padding: 5px 8px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--gray-100);
+  color: var(--text);
+}
+.dupe-todo-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.dupe-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+.dupe-todo-item.solved {
+  opacity: 0.55;
+}
+.dupe-todo-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.dupe-todo-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+.dupe-todo-member {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
+}
+.dupe-todo-member > span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.dupe-todo-loc {
+  color: var(--amber-dark) !important;
+  font-weight: 600;
+}

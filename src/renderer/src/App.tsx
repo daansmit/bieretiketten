@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { BierTable } from "./components/BierTable";
 import { ImageViewer } from "./components/ImageViewer";
+import { DuplicateFinder } from "./components/DuplicateFinder";
 import { basename } from "./utils/path";
 
 export interface BierRow {
@@ -38,6 +39,7 @@ export default function App(): JSX.Element {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState<string>("");
+  const [dupeMode, setDupeMode] = useState(false);
 
   const loadFile = useCallback(async (path: string) => {
     setLoading(true);
@@ -150,6 +152,15 @@ export default function App(): JSX.Element {
             ↺ Herladen
           </button>
         )}
+        {rows.length > 0 && (
+          <button
+            className={`btn btn-secondary${dupeMode ? " active" : ""}`}
+            onClick={() => setDupeMode((v) => !v)}
+            title="Zoek mogelijke dubbele etiketten"
+          >
+            🔍 Dubbelen
+          </button>
+        )}
         <div className="update-area">
           {appVersion && <span className="app-version">v{appVersion}</span>}
           {(updateStatus === "idle" || updateStatus === "checking") && (
@@ -197,8 +208,16 @@ export default function App(): JSX.Element {
       </div>
 
       <div className="app-body">
-        <div className="main-panel">
-          {loading && (
+        {dupeMode && rows.length > 0 ? (
+          <DuplicateFinder
+            rows={rows}
+            photosDir={photosDir}
+            onClose={() => setDupeMode(false)}
+          />
+        ) : (
+          <>
+            <div className="main-panel">
+              {loading && (
             <div className="empty-state">
               <span className="icon">⏳</span>
               <p>Bestand laden…</p>
@@ -233,7 +252,9 @@ export default function App(): JSX.Element {
               onClose={() => handleRowSelect(null)}
             />
           )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
