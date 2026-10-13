@@ -30,12 +30,17 @@ function DataCard({
   row: BierRow;
   cols: MatchColumn[];
 }): JSX.Element {
-  const field = (label: string, key: MatchColumn): JSX.Element => (
-    <div className={`dupe-field${cols.includes(key) ? " matched" : ""}`}>
-      <span className="dupe-field-label">{label}</span>
-      <span className="dupe-field-value">{String(row[key] ?? "") || "—"}</span>
-    </div>
-  );
+  const field = (label: string, key: MatchColumn): JSX.Element => {
+    const value = String(row[key] ?? "") || "—";
+    return (
+      <div className={`dupe-field${cols.includes(key) ? " matched" : ""}`}>
+        <span className="dupe-field-label">{label}</span>
+        <span className="dupe-field-value" title={value}>
+          {value}
+        </span>
+      </div>
+    );
+  };
   return (
     <div className="dupe-data-card">
       <div className="dupe-id">

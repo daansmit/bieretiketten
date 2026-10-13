@@ -128,12 +128,6 @@ export default function App(): JSX.Element {
 
   return (
     <div className="app-layout">
-      <header className="app-header">
-        <span className="logo">🍺</span>
-        <h1>Bieretiketten</h1>
-        <span className="subtitle">Collectie van Sjef</span>
-      </header>
-
       <div className="file-bar">
         <button className="btn btn-secondary" onClick={handleSelectPhotosDir}>
           🖼 {photosDir ? basename(photosDir) : "Fotos map selecteren"}
